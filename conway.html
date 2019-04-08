@@ -1,0 +1,98 @@
+<!doctype html>
+<script src="code/chapter/18_http.js"></script>
+<style>
+  #grid {
+    align-: center;
+    margin: 0px;
+    padding: 0px;
+  }
+</style>
+<div id="grid"></div>
+<button id="next">Next generation</button>
+<button id="run">Auto run</button>
+
+<script>
+  /* 
+   * Conway's Game of Life: Project from Eloquent JavaScript (3rd Edition)
+   * Darren Huang
+   * Simulates Conway's Game of life. Starts with a randomly generated grid of checkboxes, 
+   * with each box representing a cell. For every turn, live cells with less than two and
+   * more than three cells die, while dead cells with exactly three neighbors become alive.
+   */
+  
+  // Width represents # of boxes horizontally, height the # of boxes vertically.
+  const width = 20, height = 20;
+  // State of game
+  let isRunning = null;
+  let grid = document.querySelector("#grid");
+  // Stores checkboxes in array to be manipulated by subsequent turns.
+  let storedBoxes = [];
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let box = document.createElement("input");
+      box.type = "checkbox";
+      box.checked = (Math.random() < 0.5);
+      box.style.margin = "0 0 0 0";
+      box.style.padding = "0"
+      grid.appendChild(box);
+      storedBoxes.push(box);
+    }
+    grid.appendChild(document.createElement("br"));
+  }
+  
+  // Sets values of checkboxes.
+  function storedBoxesFromGrid(grid) {
+    grid.forEach((value, i) => {
+      //console.log(value);
+      storedBoxes[i].checked = value;
+    })
+  }
+ 
+  // Counts neighbors around a given cell. If cell is on border, only counts neighbors surrounding it.
+  function countNeighbors(grid, x, y) {
+    let count = 0;
+    for (let yNeighbor = Math.max(0, y - 1); yNeighbor <= Math.min(height - 1, y + 1); yNeighbor++) {
+      for (let xNeighbor = Math.max(0, x - 1); xNeighbor <= Math.min(width - 1, x + 1); xNeighbor++) {
+        if ((xNeighbor != x || yNeighbor != y) && grid[xNeighbor + yNeighbor * width].checked) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
+  // Generates state of the checkbox grid of the next turn
+  function generate(boxGrid) {
+    let boxValues = new Array(width * height);
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        let neighbors = countNeighbors(boxGrid, x, y);
+        let offset = x + y * width;
+        if (neighbors < 2 || neighbors > 3) {
+          boxValues[offset] = false;
+        } else if (boxGrid[offset].checked || neighbors == 3) {
+          // Above check works fufills conditions for both dead and alive cells
+          boxValues[offset] = true;
+        }
+      }
+    }
+    return boxValues;
+  }
+
+  // Displays result of next generation
+  function nextTurn() {
+    let boxValues = generate(storedBoxes);  
+    storedBoxesFromGrid(boxValues);
+  }
+
+  storedBoxesFromGrid(storedBoxes.map(box => box.checked));
+  document.querySelector("#next").addEventListener("click", nextTurn);
+  document.querySelector("#run").addEventListener("click", () => {
+    if (isRunning) {
+      clearInterval(isRunning);
+      isRunning = null;
+    } else {
+      isRunning = setInterval(nextTurn, 70);
+    }
+  });
+</script>
